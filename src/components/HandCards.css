@@ -266,3 +266,20 @@
     font-size: 16px;
   }
 }
+
+/* 出牌动画 */
+.card-normal.animating,
+.card-mini.animating {
+  animation: flyOut 0.4s ease-in forwards;
+}
+
+@keyframes flyOut {
+  0% {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(-150px) scale(0.5);
+    opacity: 0;
+  }
+}

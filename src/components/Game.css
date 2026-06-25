@@ -881,3 +881,436 @@
     pointer-events: none;
   }
 }
+
+/* ====== 炸弹特效 ====== */
+.bomb-effect {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 120px;
+  z-index: 1000;
+  animation: bombExplosion 0.8s ease-out forwards;
+  pointer-events: none;
+  text-shadow: 0 0 30px #ff6600, 0 0 60px #ff3300;
+}
+
+@keyframes bombExplosion {
+  0% {
+    transform: translate(-50%, -50%) scale(0.5);
+    opacity: 1;
+  }
+  50% {
+    transform: translate(-50%, -50%) scale(1.5);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(-50%, -50%) scale(2);
+    opacity: 0;
+  }
+}
+
+/* ====== 回合指示器 ====== */
+.turn-indicator {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 10;
+  pointer-events: none;
+}
+
+.turn-badge {
+  background: rgba(0, 0, 0, 0.7);
+  color: white;
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-size: 13px;
+  white-space: nowrap;
+  backdrop-filter: blur(4px);
+  border: 1px solid rgba(255,255,255,0.2);
+  transition: all 0.3s ease;
+}
+
+.turn-badge.my-turn {
+  background: linear-gradient(135deg, #4CAF50, #2196F3);
+  color: white;
+  box-shadow: 0 0 15px rgba(76, 175, 80, 0.5);
+  animation: myTurnGlow 1.5s ease-in-out infinite;
+}
+
+@keyframes myTurnGlow {
+  0%, 100% { box-shadow: 0 0 15px rgba(76, 175, 80, 0.5); }
+  50% { box-shadow: 0 0 25px rgba(76, 175, 80, 0.8), 0 0 40px rgba(33, 150, 243, 0.4); }
+}
+
+/* ====== 级牌提示 ====== */
+.level-tip {
+  position: absolute;
+  top: 80px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0, 0, 0, 0.85);
+  color: white;
+  padding: 10px 16px;
+  border-radius: 10px;
+  font-size: 13px;
+  z-index: 100;
+  animation: slideDown 0.3s ease;
+  border: 1px solid rgba(255,255,255,0.15);
+  max-width: 300px;
+  text-align: center;
+}
+
+.level-tip-title {
+  font-weight: bold;
+  margin-bottom: 4px;
+  color: #ff9800;
+}
+
+.level-tip-body {
+  color: #ccc;
+}
+
+.level-tip-body strong {
+  color: #ffeb3b;
+}
+
+@keyframes slideDown {
+  from { opacity: 0; transform: translateX(-50%) translateY(-10px); }
+  to { opacity: 1; transform: translateX(-50%) translateY(0); }
+}
+
+/* ====== 牌型提示 ====== */
+.center-pattern-hint {
+  position: absolute;
+  bottom: -30px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: linear-gradient(135deg, #4CAF50, #2196F3);
+  color: white;
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-size: 13px;
+  font-weight: bold;
+  white-space: nowrap;
+  animation: hintPop 0.3s ease;
+}
+
+@keyframes hintPop {
+  0% { transform: translateX(-50%) scale(0.8); opacity: 0; }
+  50% { transform: translateX(-50%) scale(1.1); }
+  100% { transform: translateX(-50%) scale(1); opacity: 1; }
+}
+
+/* ====== 出牌动画 ====== */
+.animating {
+  animation: flyToCenter 0.4s ease-in-out forwards;
+}
+
+@keyframes flyToCenter {
+  0% {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: translateY(-150px) scale(1.2);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(-200px) scale(0.5);
+    opacity: 0;
+  }
+}
+
+/* ====== 思考动画 ====== */
+.thinking {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: rgba(0, 0, 0, 0.7);
+  color: white;
+  padding: 12px 20px;
+  border-radius: 12px;
+  font-size: 14px;
+  z-index: 50;
+  backdrop-filter: blur(4px);
+  animation: fadeIn 0.3s ease;
+}
+
+.thinking-dots {
+  display: inline-flex;
+  gap: 4px;
+  margin-right: 8px;
+}
+
+.thinking-dots span {
+  width: 6px;
+  height: 6px;
+  background: #4CAF50;
+  border-radius: 50%;
+  animation: thinkingBounce 1.4s ease-in-out infinite;
+}
+
+.thinking-dots span:nth-child(2) { animation-delay: 0.2s; }
+.thinking-dots span:nth-child(3) { animation-delay: 0.4s; }
+
+@keyframes thinkingBounce {
+  0%, 80%, 100% { transform: scale(0.6); opacity: 0.5; }
+  40% { transform: scale(1); opacity: 1; }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* ====== 玩家操作区 ====== */
+.player-actions {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.action-button.play-button {
+  background: linear-gradient(135deg, #4CAF50, #45a049);
+  color: white;
+  padding: 10px 24px;
+  border-radius: 25px;
+  font-size: 16px;
+  font-weight: bold;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 12px rgba(76, 175, 80, 0.4);
+}
+
+.action-button.play-button:hover:not(:disabled) {
+  transform: scale(1.05);
+  box-shadow: 0 6px 20px rgba(76, 175, 80, 0.6);
+}
+
+.action-button.play-button:disabled {
+  background: #666;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+.action-button.pass-button {
+  background: rgba(255, 255, 255, 0.2);
+  color: white;
+  padding: 10px 20px;
+  border-radius: 25px;
+  font-size: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.action-button.pass-button:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+.error-hint {
+  color: #ff5252;
+  font-size: 13px;
+  animation: shake 0.3s ease;
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-5px); }
+  75% { transform: translateX(5px); }
+}
+
+/* ====== 贡牌动画 ====== */
+.tribute-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 500;
+  animation: fadeIn 0.3s ease;
+}
+
+.tribute-content {
+  background: rgba(30, 30, 50, 0.95);
+  padding: 30px 40px;
+  border-radius: 16px;
+  text-align: center;
+  border: 1px solid rgba(255,255,255,0.1);
+}
+
+.tribute-content h3 {
+  margin: 0 0 12px;
+  color: #ffd700;
+  font-size: 20px;
+}
+
+.tribute-card-info {
+  color: #ccc;
+  margin-bottom: 8px;
+}
+
+.tribute-animation {
+  color: #4CAF50;
+  animation: pulse 1s ease infinite;
+}
+
+/* ====== 游戏结束 ====== */
+.game-over-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.85);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 600;
+  animation: fadeIn 0.5s ease;
+}
+
+.game-over-content {
+  text-align: center;
+  padding: 40px;
+}
+
+.game-over-title {
+  font-size: 32px;
+  margin-bottom: 20px;
+}
+
+.game-over-stats {
+  color: #ccc;
+  font-size: 16px;
+  margin-bottom: 24px;
+  line-height: 1.8;
+}
+
+.game-over-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+}
+
+.action-button.secondary {
+  background: rgba(255, 255, 255, 0.15);
+  color: white;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  padding: 12px 24px;
+  border-radius: 25px;
+  font-size: 16px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.action-button.secondary:hover {
+  background: rgba(255, 255, 255, 0.25);
+}
+
+/* ====== 玩家出牌区 ====== */
+.player-play-area {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  padding: 8px 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 120px;
+}
+
+.south-play {
+  margin-bottom: 10px;
+}
+
+.play-label {
+  font-size: 11px;
+  color: rgba(255,255,255,0.6);
+  margin-bottom: 4px;
+}
+
+.played-cards {
+  display: flex;
+  gap: 2px;
+  justify-content: center;
+}
+
+.north-play {
+  margin-bottom: 10px;
+}
+
+/* ====== 级牌选择器 ====== */
+.level-indicator {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  z-index: 20;
+}
+
+.level-badge {
+  background: linear-gradient(135deg, #ff9800, #f57c00);
+  color: white;
+  padding: 6px 14px;
+  border-radius: 16px;
+  font-size: 14px;
+  font-weight: bold;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(255, 152, 0, 0.4);
+  transition: all 0.2s ease;
+}
+
+.level-badge:hover {
+  transform: scale(1.05);
+}
+
+.level-selector {
+  position: absolute;
+  top: 40px;
+  right: 0;
+  background: rgba(20, 20, 40, 0.95);
+  border-radius: 12px;
+  padding: 10px;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  min-width: 200px;
+  animation: slideDown 0.2s ease;
+}
+
+.level-option {
+  padding: 6px 10px;
+  text-align: center;
+  border-radius: 8px;
+  cursor: pointer;
+  color: white;
+  font-size: 14px;
+  transition: all 0.2s ease;
+}
+
+.level-option:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.level-option.active {
+  background: linear-gradient(135deg, #4CAF50, #2196F3);
+  font-weight: bold;
+}
+
+/* ====== 牌数警告 ====== */
+.card-count-warning {
+  font-size: 12px;
+  color: #ff9800;
+  font-weight: bold;
+  animation: pulse 1s ease infinite;
+}

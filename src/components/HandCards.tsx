@@ -10,6 +10,7 @@ interface HandCardsProps {
   onCardSelect: (card: CardType) => void;
   currentLevel: number;
   isMyTurn: boolean;
+  animatingIds?: string[]; // 正在动画中的牌ID
 }
 
 // 花色符号映射
@@ -38,7 +39,8 @@ export const HandCards: React.FC<HandCardsProps> = ({
   selectedCards,
   onCardSelect,
   currentLevel,
-  isMyTurn
+  isMyTurn,
+  animatingIds = []
 }) => {
   const [layout, setLayout] = useState<'horizontal' | 'vertical'>('horizontal');
   const [hoveredSuit, setHoveredSuit] = useState<string | null>(null);
@@ -215,8 +217,8 @@ export const HandCards: React.FC<HandCardsProps> = ({
                   {suitCards.map(card => (
                     <div
                       key={card.id}
-                      className={`card-mini ${isCardSelected(card) ? 'selected' : ''} ${isRedLevel(card) ? 'wild-card' : ''}`}
-                      onClick={() => isMyTurn && onCardSelect(card)}
+                      className={`card-mini ${isCardSelected(card) ? 'selected' : ''} ${isRedLevel(card) ? 'wild-card' : ''} ${animatingIds.includes(card.id) ? 'animating' : ''}`}
+                      onClick={() => isMyTurn && !animatingIds.includes(card.id) && onCardSelect(card)}
                       style={{ color: SUIT_COLORS[card.suit] }}
                     >
                       <span className="card-rank">{RANK_LABELS[card.value]}</span>
@@ -291,8 +293,8 @@ export const HandCards: React.FC<HandCardsProps> = ({
         {cards.map(card => (
           <div
             key={card.id}
-            className={`card-normal ${isCardSelected(card) ? 'selected' : ''} ${isRedLevel(card) ? 'wild-card' : ''}`}
-            onClick={() => isMyTurn && onCardSelect(card)}
+            className={`card-normal ${isCardSelected(card) ? 'selected' : ''} ${isRedLevel(card) ? 'wild-card' : ''} ${animatingIds.includes(card.id) ? 'animating' : ''}`}
+            onClick={() => isMyTurn && !animatingIds.includes(card.id) && onCardSelect(card)}
           >
             <div className="card-content" style={{ color: SUIT_COLORS[card.suit] }}>
               <div className="card-rank">{RANK_LABELS[card.value]}</div>

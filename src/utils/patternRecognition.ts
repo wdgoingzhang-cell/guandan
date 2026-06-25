@@ -404,3 +404,150 @@ function getBombLevel(combo: CardCombination): number {
   }
   return 1; // 4张炸弹
 }
+
+// 获取所有可出的牌型（用于出牌提示）
+export function getAllValidPlays(
+  cards: Card[],
+  lastPlay: CardCombination | null,
+  currentLevel: number
+): CardCombination[] {
+  const results: CardCombination[] = [];
+  
+  // 如果没有上家出牌，返回所有可能的牌型
+  if (!lastPlay) {
+    // 单牌
+    cards.forEach(card => {
+      const pattern = identifyPattern([card], currentLevel);
+      if (pattern) results.push(pattern);
+    });
+    
+    // 对子
+    for (let i = 0; i < cards.length; i++) {
+      for (let j = i + 1; j < cards.length; j++) {
+        if (cards[i].value === cards[j].value) {
+          const pattern = identifyPattern([cards[i], cards[j]], currentLevel);
+          if (pattern) results.push(pattern);
+        }
+      }
+    }
+    
+    // 其他组合...
+    return results;
+  }
+  
+  // 有上家出牌，找出能压过的牌型
+  // 检查炸弹/同花顺能否压过
+  const bombCombos = findAllBombs(cards);
+  bombCombos.forEach(bomb => {
+    const pattern = identifyPattern(bomb, currentLevel);
+    if (pattern && compareCombinations(pattern, lastPlay, currentLevel)) {
+      results.push(pattern);
+    }
+  });
+  
+  // 如果上家不是炸弹，检查普通牌型
+  if (lastPlay.pattern !== CardPattern.Bomb && lastPlay.pattern !== CardPattern.FlushStraight) {
+    // 检查同类型牌型
+    const matchingCombos = findMatchingCombos(cards, lastPlay);
+    matchingCombos.forEach(combo => {
+      const pattern = identifyPattern(combo, currentLevel);
+      if (pattern && pattern.pattern === lastPlay.pattern && pattern.length === lastPlay.length) {
+        if (compareCombinations(pattern, lastPlay, currentLevel)) {
+          results.push(pattern);
+        }
+      }
+    });
+  }
+  
+  return results;
+}
+
+// 找出所有炸弹组合
+function findAllBombs(cards: Card[]): Card[][] {
+  const bombs: Card[][] = [];
+  
+  // 按牌值分组
+  const byValue = new Map<number, Card[]>();
+  cards.forEach(card => {
+    const existing = byValue.get(card.value) || [];
+    existing.push(card);
+    byValue.set(card.value, existing);
+  });
+  
+  // 找出4张及以上的
+  byValue.forEach((sameCards) => {
+    if (sameCards.length >= 4) {
+      bombs.push([...sameCards]);
+    }
+  });
+  
+  // 双王炸弹
+  const jokers = cards.filter(c => c.value >= 15);
+  if (jokers.length >= 2) {
+    bombs.push([...jokers]);
+  }
+  
+  return bombs;
+}
+
+// 找出能匹配上家牌型的组合
+function findMatchingCombos(cards: Card[], lastPlay: CardCombination): Card[][] {
+  const combos: Card[][] = [];
+  const needed = lastPlay.length;
+  
+  // 同值组合
+  if (['Bomb', 'Triplet', 'Pair', 'Single'].includes(lastPlay.pattern)) {
+    const byValue = new Map<number, Card[]>();
+    cards.forEach(card => {
+      const existing = byValue.get(card.value) || [];
+      existing.push(card);
+      byValue.set(card.value, existing);
+    });
+    
+    byValue.forEach((sameCards) => {
+      if (sameCards.length >= needed && sameCards[0].value > lastPlay.mainValue) {
+        combos.push([...sameCards].slice(0, needed));
+      }
+    });
+  }
+  
+  // 顺子
+  if (lastPlay.pattern === 'Straight') {
+    // 找所有顺子
+    const sortedCards = [...cards].sort((a, b) => b.value - a.value);
+    for (let i = 0; i < sortedCards.length; i++) {
+      for (let len = 5; len <= 12; len++) {
+        const straight = findStraight(sortedCards, i, len, lastPlay.mainValue);
+        if (straight && straight.length === len) {
+          combos.push(straight);
+        }
+      }
+    }
+  }
+  
+  return combos;
+}
+
+// 找顺子
+function findStraight(cards: Card[], startIndex: number, length: number, minValue: number): Card[] {
+  const result: Card[] = [];
+  let currentValue = cards[startIndex].value;
+  
+  // 找到最大牌
+  if (currentValue <= minValue) return [];
+  
+  result.push(cards[startIndex]);
+  let found = 1;
+  let idx = startIndex + 1;
+  
+  while (found < length && idx < cards.length) {
+    if (cards[idx].value === currentValue - 1) {
+      result.push(cards[idx]);
+      currentValue = cards[idx].value;
+      found++;
+    }
+    idx++;
+  }
+  
+  return found >= length ? result : [];
+}

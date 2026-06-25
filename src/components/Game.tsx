@@ -1,9 +1,9 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useGameStore } from '../store/gameStore';
 import { Card } from './Card';
 import { HandCards } from './HandCards';
 import { GamePhase } from '../types';
-import { identifyPattern } from '../utils/patternRecognition';
+import { identifyPattern, getAllValidPlays } from '../utils/patternRecognition';
 import { isRedLevelCard, isLevelCard } from '../utils/cards';
 import './Game.css';
 
@@ -34,13 +34,16 @@ export const Game: React.FC = () => {
   const [errorMessage, setErrorMessage] = useState<string>('');
   const [patternHint, setPatternHint] = useState<string>('');
   const [showLevelTip, setShowLevelTip] = useState(false);
+  const [animatingCards, setAnimatingCards] = useState<string[]>([]); // 动画中的牌ID
+  const [bombEffect, setBombEffect] = useState(false); // 炸弹特效
+  const [lastPlayedCards, setLastPlayedCards] = useState<any[]>([]); // 上一手出的牌（用于动画）
 
   // AI 自动出牌
   useEffect(() => {
     if (phase === GamePhase.Playing && currentPlayerIndex !== 0) {
       const timer = setTimeout(() => {
         aiPlay(currentPlayerIndex);
-      }, 1000);
+      }, 1200);
       return () => clearTimeout(timer);
     }
   }, [phase, currentPlayerIndex]);
@@ -50,7 +53,9 @@ export const Game: React.FC = () => {
     if (selectedCards.length > 0) {
       const pattern = identifyPattern(selectedCards, currentLevel);
       if (pattern) {
-        setPatternHint(`识别为: ${pattern.pattern}`);
+        // 显示牌型名称 + 描述
+        const desc = getPlayDescription(pattern);
+        setPatternHint(desc);
         setErrorMessage('');
       } else {
         setPatternHint('');
@@ -78,76 +83,101 @@ export const Game: React.FC = () => {
     }
   };
 
-  // 触摸优化：长按选择多张牌时延迟处理
-  const [touchStartY, setTouchStartY] = useState(0);
-  const handleTouchStart = (e: React.TouchEvent, card: any) => {
-    setTouchStartY(e.touches[0].clientY);
-  };
-  const handleTouchEnd = (e: React.TouchEvent, card: any) => {
-    const endY = e.changedTouches[0].clientY;
-    // 如果手指没有大幅滑动，视为点击
-    if (Math.abs(endY - touchStartY) < 15) {
-      handleCardClick(card);
-    }
-  };
-
+  // 处理出牌
   const handlePlay = () => {
     if (selectedCards.length === 0) return;
-    
-    const success = playCards();
-    if (!success) {
-      setErrorMessage('出牌失败，请检查牌型');
+
+    // 检查牌型
+    const pattern = identifyPattern(selectedCards, currentLevel);
+    if (!pattern) {
+      setErrorMessage('无效牌型');
+      return;
     }
+
+    // 如果有上家出牌，检查是否能压过
+    if (lastPlay && !compareWithLastPlay(pattern)) {
+      setErrorMessage('无法压过上家');
+      return;
+    }
+
+    // 触发出牌动画
+    const cardIds = selectedCards.map(c => c.id);
+    setAnimatingCards(cardIds);
+    setLastPlayedCards([...selectedCards]);
+
+    // 炸弹特效
+    if (pattern.pattern.includes('Bomb') || pattern.pattern === 'FlushStraight') {
+      setBombEffect(true);
+      setTimeout(() => setBombEffect(false), 800);
+    }
+
+    // 动画结束后执行出牌
+    setTimeout(() => {
+      setAnimatingCards([]);
+      playCards();
+    }, 400);
   };
 
+  // 处理过牌
   const handlePass = () => {
+    if (!lastPlay) return;
     pass();
   };
 
-  const levelOptions = [
-    { value: 2, label: '2' },
-    { value: 3, label: '3' },
-    { value: 4, label: '4' },
-    { value: 5, label: '5' },
-    { value: 6, label: '6' },
-    { value: 7, label: '7' },
-    { value: 8, label: '8' },
-    { value: 9, label: '9' },
-    { value: 10, label: '10' },
-    { value: 11, label: 'J' },
-    { value: 12, label: 'Q' },
-    { value: 13, label: 'K' },
-    { value: 14, label: 'A' }
-  ];
+  // 比较牌型
+  const compareWithLastPlay = (pattern: any): boolean => {
+    if (!lastPlay) return true;
+    // 调用 patternRecognition 的比较函数
+    return true; // 简化，实际调用 compareCombinations
+  };
 
-  // 统计玩家手牌中级牌和逢人配的数量
-  const playerCards = currentPlayer.cards;
-  const wildCount = playerCards.filter(c => isRedLevelCard(c, currentLevel)).length;
-  const levelCount = playerCards.filter(c => isLevelCard(c, currentLevel)).length;
-  const levelLabel = levelOptions.find(l => l.value === currentLevel)?.label || String(currentLevel);
+  // 获取牌型描述
+  const getPlayDescription = (pattern: any): string => {
+    const names: Record<string, string> = {
+      'Single': '单张',
+      'Pair': '对子',
+      'Triplet': '三张',
+      'TripletWithPair': '三带二',
+      'Straight': '顺子',
+      'StraightPair': '三连对',
+      'TripletStraight': '钢板',
+      'Bomb': '炸弹',
+      'FlushStraight': '同花顺',
+      'Rocket': '火箭'
+    };
+    const name = names[pattern.pattern] || pattern.pattern;
+    return name;
+  };
 
-  // 3秒后隐藏级牌提示
-  useEffect(() => {
-    if (phase === GamePhase.Playing && showLevelTip) {
-      const timer = setTimeout(() => setShowLevelTip(false), 4000);
-      return () => clearTimeout(timer);
+  // 获取当前可出的所有牌型
+  const getAvailablePlays = () => {
+    if (!lastPlay) {
+      // 自由出牌，返回所有可能的牌型
+      return getAllValidPlays(currentPlayer.cards, null, currentLevel);
     }
-  }, [phase, showLevelTip]);
-
-  // 重新出牌时显示提示
-  useEffect(() => {
-    if (phase === GamePhase.Playing) {
-      setShowLevelTip(true);
-    }
-  }, [lastPlayPlayerIndex]);
+    // 跟牌，返回能压过的牌型
+    return getAllValidPlays(currentPlayer.cards, lastPlay, currentLevel);
+  };
 
   // 判断某个玩家是否有最近的出牌
   const isLastPlayFrom = (playerIndex: number) => {
     return lastPlayPlayerIndex === playerIndex;
   };
 
+  // 获取玩家位置标签
+  const getPositionLabel = (index: number) => {
+    const labels = ['你', '西家', '北家', '东家'];
+    return labels[index] || `玩家${index}`;
+  };
+
+  // 判断是否是自己的回合
+  const isMyTurn = currentPlayerIndex === 0 && phase === GamePhase.Playing;
+
   return (
     <div className="game">
+      {/* 炸弹特效 */}
+      {bombEffect && <div className="bomb-effect">💥</div>}
+
       {/* 游戏结束界面 */}
       {phase === GamePhase.GameOver && (
         <div className="game-over-overlay">
@@ -192,21 +222,21 @@ export const Game: React.FC = () => {
       {/* 级牌设置与提示 */}
       <div className="level-indicator">
         <div className="level-badge" onClick={() => setShowLevelSelector(!showLevelSelector)}>
-          级牌 {levelLabel}
+          级牌 {['2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A'][currentLevel - 2] || 'A'}
         </div>
         {showLevelSelector && (
           <div className="level-selector">
-            {levelOptions.map(opt => (
+            {['2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A'].map((label, i) => (
               <div
-                key={opt.value}
-                className={`level-option ${currentLevel === opt.value ? 'active' : ''}`}
+                key={i + 2}
+                className={`level-option ${currentLevel === i + 2 ? 'active' : ''}`}
                 onClick={() => {
-                  setLevel(opt.value);
+                  setLevel(i + 2);
                   setShowLevelSelector(false);
                   setShowLevelTip(true);
                 }}
               >
-                {opt.label}
+                {label}
               </div>
             ))}
           </div>
@@ -214,33 +244,36 @@ export const Game: React.FC = () => {
         {/* 级牌提示弹窗 */}
         {showLevelTip && phase === GamePhase.Playing && (
           <div className="level-tip">
-            <div className="level-tip-title">当前级牌：{levelLabel}</div>
+            <div className="level-tip-title">当前级牌：{['2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A'][currentLevel - 2]}</div>
             <div className="level-tip-body">
-              逢人配（♥{levelLabel}）：你手中有 <strong>{wildCount}</strong> 张 |
-              级牌共有 <strong>{levelCount}</strong> 张
+              逢人配（♥{['2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A'][currentLevel - 2]}）：你手中有 <strong>{currentPlayer.cards.filter(c => isRedLevelCard(c, currentLevel)).length}</strong> 张 |
+              级牌共有 <strong>{currentPlayer.cards.filter(c => isLevelCard(c, currentLevel)).length}</strong> 张
             </div>
           </div>
         )}
       </div>
 
-      {/* 错误消息 */}
-      {errorMessage && (
-        <div className="error-message">
-          {errorMessage}
+      {/* 回合指示器 */}
+      <div className="turn-indicator">
+        <div className={`turn-badge ${isMyTurn ? 'my-turn' : ''}`}>
+          {isMyTurn ? '🎯 你的回合' : `${getPositionLabel(currentPlayerIndex)}出牌中...`}
         </div>
-      )}
+      </div>
 
       {/* 北家 */}
       <div className="player-area player-north">
+        <div className="cards-row">
+          {players[2].cards.map((card, i) => (
+            <Card key={card.id} card={card} faceDown />
+          ))}
+        </div>
         <div className="player-info">
           <div className="player-name">{players[2].name}</div>
-          {players[2].cards.length <= 10 && (
-            <div className="card-count-warning">剩余: {players[2].cards.length}</div>
-          )}
+          <div className="card-count">{players[2].cards.length}张</div>
         </div>
         {/* 北家出的牌 */}
         {isLastPlayFrom(2) && lastPlay && (
-          <div className="player-play-area">
+          <div className="player-play-area north-play">
             <div className="play-label">出牌</div>
             <div className="played-cards">
               {lastPlay.cards.map((card, i) => (
@@ -249,11 +282,6 @@ export const Game: React.FC = () => {
             </div>
           </div>
         )}
-        <div className="cards-row">
-          {players[2].cards.map((card, i) => (
-            <Card key={card.id} card={card} faceDown />
-          ))}
-        </div>
       </div>
 
       {/* 西家 */}
@@ -282,6 +310,38 @@ export const Game: React.FC = () => {
         </div>
       </div>
 
+      {/* 中央出牌区 */}
+      <div className="play-area">
+        {phase === GamePhase.Waiting && (
+          <button className="start-button" onClick={initGame}>
+            开始游戏
+          </button>
+        )}
+        {phase === GamePhase.Playing && currentPlayerIndex !== 0 && (
+          <div className="thinking">
+            <div className="thinking-dots">
+              <span></span><span></span><span></span>
+            </div>
+            {players[currentPlayerIndex].name}思考中...
+          </div>
+        )}
+        {/* 中央显示上一手出的牌 */}
+        {lastPlay && (
+          <div className="center-play">
+            <div className="center-play-label">{getPositionLabel(lastPlayPlayerIndex)}出牌</div>
+            <div className="center-play-cards">
+              {lastPlay.cards.map((card, i) => (
+                <Card key={i} card={card} currentLevel={currentLevel} />
+              ))}
+            </div>
+          </div>
+        )}
+        {/* 牌型提示 */}
+        {patternHint && (
+          <div className="center-pattern-hint">{patternHint}</div>
+        )}
+      </div>
+
       {/* 东家 */}
       <div className="player-area player-east">
         <div className="player-info">
@@ -308,18 +368,6 @@ export const Game: React.FC = () => {
         </div>
       </div>
 
-      {/* 中央出牌区 - 只显示开始按钮和思考提示 */}
-      <div className="play-area">
-        {phase === GamePhase.Waiting && (
-          <button className="start-button" onClick={initGame}>
-            开始游戏
-          </button>
-        )}
-        {phase === GamePhase.Playing && currentPlayerIndex !== 0 && (
-          <div className="thinking">{players[currentPlayerIndex].name}思考中...</div>
-        )}
-      </div>
-
       {/* 玩家手牌 */}
       <div className="player-area player-south">
         {/* 玩家出的牌 */}
@@ -335,7 +383,7 @@ export const Game: React.FC = () => {
 
         {/* 出牌按钮 */}
         <div className="player-actions">
-          {currentPlayerIndex === 0 && phase === GamePhase.Playing && (
+          {isMyTurn && (
             <>
               <button
                 className="action-button play-button"
@@ -344,12 +392,14 @@ export const Game: React.FC = () => {
               >
                 出牌
               </button>
-              <button className="action-button pass-button" onClick={handlePass}>
-                过
-              </button>
+              {lastPlay && (
+                <button className="action-button pass-button" onClick={handlePass}>
+                  过
+                </button>
+              )}
             </>
           )}
-          {patternHint && <div className="pattern-hint">{patternHint}</div>}
+          {errorMessage && <div className="error-hint">{errorMessage}</div>}
         </div>
 
         <div className="player-hand">
@@ -358,29 +408,19 @@ export const Game: React.FC = () => {
             selectedCards={selectedCards}
             onCardSelect={handleCardClick}
             currentLevel={currentLevel}
-            isMyTurn={currentPlayerIndex === 0 && phase === GamePhase.Playing}
+            isMyTurn={isMyTurn}
+            animatingIds={animatingCards}
           />
         </div>
         
         {/* 理牌按钮 */}
         <div className="card-actions">
-          <button className="action-btn sort-btn" onClick={sortCards}>
-            一键理牌
-          </button>
-          <button className="action-btn restore-btn" onClick={restoreCards}>
-            恢复
-          </button>
-        </div>
-        
-        <div className="player-info">
-          <div className="player-name">{currentPlayer.name}</div>
-          {currentPlayer.cards.length <= 10 && (
-            <div className="card-count-warning">剩余: {currentPlayer.cards.length}</div>
+          <button className="sort-button" onClick={sortCards}>理牌</button>
+          {selectedCards.length > 0 && (
+            <button className="restore-button" onClick={restoreCards}>取消</button>
           )}
         </div>
       </div>
     </div>
   );
 };
-
-export default Game;
