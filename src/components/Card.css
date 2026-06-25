@@ -1,0 +1,230 @@
+.card {
+  width: var(--card-width, 70px);
+  height: var(--card-height, 100px);
+  background: linear-gradient(145deg, #ffffff, #f0f0f0);
+  border-radius: 6px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  position: relative;
+  overflow: hidden;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+}
+
+.card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.card:active {
+  transform: translateY(-8px);
+}
+
+.card.selected {
+  transform: translateY(-20px);
+  box-shadow: 0 8px 16px rgba(255, 215, 0, 0.5);
+  border: 2px solid gold;
+}
+
+.card-inner {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 3px;
+}
+
+.card-top-left,
+.card-bottom-right {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  font-weight: bold;
+}
+
+.card-bottom-right {
+  transform: rotate(180deg);
+}
+
+.card-rank {
+  font-size: var(--card-rank-font, 18px);
+  line-height: 1;
+}
+
+.card-suit {
+  font-size: var(--card-suit-font, 16px);
+  line-height: 1;
+}
+
+.card-center {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.card-suit-large {
+  font-size: var(--card-suit-large-font, 32px);
+}
+
+/* 牌背 */
+.card.face-down {
+  background: linear-gradient(145deg, #1e3a8a, #1e40af);
+  cursor: default;
+}
+
+.card-back {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.card-back-pattern {
+  width: 80%;
+  height: 80%;
+  background: repeating-linear-gradient(
+    45deg,
+    #3b82f6,
+    #3b82f6 2px,
+    #1e40af 2px,
+    #1e40af 4px
+  );
+  border-radius: 4px;
+  border: 2px solid #60a5fa;
+}
+
+/* 级牌标记 */
+.card.level-card {
+  box-shadow: 0 0 8px rgba(255, 215, 0, 0.25);
+}
+
+.card.level-card::after {
+  content: '';
+  position: absolute;
+  bottom: 2px;
+  right: 2px;
+  width: 8px;
+  height: 8px;
+  background: #ffd700;
+  border-radius: 50%;
+  box-shadow: 0 0 4px rgba(255, 215, 0, 0.6);
+}
+
+/* 级牌标记 - 小屏适配 */
+@media (max-width: 767px) {
+  .card.level-card::after {
+    width: 6px;
+    height: 6px;
+    bottom: 1px;
+    right: 1px;
+  }
+}
+
+/* 逢人配标记 */
+.card.wild-card {
+  background: linear-gradient(145deg, #fff5f5, #ffe0e0);
+  box-shadow: 0 0 12px rgba(255, 0, 0, 0.2);
+}
+
+.wild-badge {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) rotate(-15deg);
+  font-size: var(--wild-badge-font, 28px);
+  font-weight: bold;
+  color: rgba(255, 0, 0, 0.15);
+  pointer-events: none;
+  z-index: 1;
+  line-height: 1;
+}
+
+@media (max-width: 767px) {
+  .wild-badge {
+    font-size: 18px;
+  }
+}
+
+@media (min-width: 768px) and (max-width: 1200px) and (min-height: 900px) {
+  .wild-badge {
+    font-size: 22px;
+  }
+}
+
+@media (min-width: 1800px) {
+  .wild-badge {
+    font-size: 40px;
+  }
+}
+
+/* 手机竖屏 */
+@media (max-width: 767px) {
+  .card {
+    width: var(--card-width-mobile, 44px);
+    height: var(--card-height-mobile, 64px);
+  }
+
+  .card.selected {
+    transform: translateY(-14px);
+  }
+
+  .card-rank {
+    font-size: 13px;
+  }
+
+  .card-suit {
+    font-size: 11px;
+  }
+
+  .card-suit-large {
+    font-size: 20px;
+  }
+}
+
+/* 折叠屏/小平板 - Mate XTS展开后的方屏 */
+@media (min-width: 768px) and (max-width: 1200px) and (min-height: 900px) {
+  .card {
+    width: var(--card-width-fold, 50px);
+    height: var(--card-height-fold, 72px);
+  }
+
+  .card.selected {
+    transform: translateY(-16px);
+  }
+
+  .card-rank {
+    font-size: 14px;
+  }
+
+  .card-suit {
+    font-size: 12px;
+  }
+
+  .card-suit-large {
+    font-size: 24px;
+  }
+}
+
+@media (min-width: 1800px) {
+  .card {
+    width: var(--card-width-wide, 90px);
+    height: var(--card-height-wide, 130px);
+  }
+
+  .card-rank {
+    font-size: 22px;
+  }
+
+  .card-suit {
+    font-size: 18px;
+  }
+
+  .card-suit-large {
+    font-size: 44px;
+  }
+}

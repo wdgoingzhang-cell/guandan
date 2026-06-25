@@ -1,0 +1,837 @@
+:root {
+  --card-width: 60px;
+  --card-height: 86px;
+  --card-width-mobile: 42px;
+  --card-height-mobile: 60px;
+  --card-width-fold: 48px;
+  --card-height-fold: 68px;
+  --card-overlap-hand: -32px;
+  --card-overlap-hand-mobile: -42px;
+  --card-overlap-row: -40px;
+  --card-overlap-col: -50px;
+  --card-overlap-played: -18px;
+}
+
+.game {
+  width: 100%;
+  height: 100dvh;
+  height: 100vh;
+  position: relative;
+  background: radial-gradient(circle at center, #2d5a3d 0%, #1a3d2a 100%);
+  overflow: hidden;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+/* ====== 级牌指示器 ====== */
+.level-indicator {
+  position: absolute;
+  top: max(10px, env(safe-area-inset-top, 10px));
+  left: max(10px, env(safe-area-inset-left, 10px));
+  z-index: 100;
+}
+
+.level-badge {
+  background: linear-gradient(145deg, #ffd700, #ffed4e);
+  color: #333;
+  padding: 6px 14px;
+  border-radius: 16px;
+  font-weight: bold;
+  font-size: 13px;
+  cursor: pointer;
+  box-shadow: 0 3px 8px rgba(255, 215, 0, 0.3);
+  transition: all 0.2s ease;
+  touch-action: manipulation;
+}
+
+.level-selector {
+  position: absolute;
+  top: 42px;
+  right: 0;
+  background: rgba(255, 255, 255, 0.96);
+  border-radius: 10px;
+  padding: 8px;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+  z-index: 101;
+}
+
+.level-option {
+  padding: 6px 12px;
+  background: #f0f0f0;
+  border-radius: 6px;
+  cursor: pointer;
+  text-align: center;
+  font-weight: bold;
+  font-size: 13px;
+  transition: all 0.15s ease;
+  touch-action: manipulation;
+}
+
+.level-option:active { background: #ffd700; }
+.level-option.active { background: #ffd700; box-shadow: 0 2px 6px rgba(255,215,0,0.5); }
+
+/* 级牌提示弹窗 */
+.level-tip {
+  position: absolute;
+  top: 50px;
+  left: 0;
+  background: rgba(0, 0, 0, 0.85);
+  color: #fff;
+  border-radius: 10px;
+  padding: 10px 14px;
+  max-width: 260px;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+  z-index: 102;
+  animation: fadeInDown 0.3s ease;
+  backdrop-filter: blur(8px);
+}
+
+.level-tip-title {
+  font-size: 14px;
+  font-weight: bold;
+  color: #ffd700;
+  margin-bottom: 6px;
+}
+
+.level-tip-body {
+  font-size: 12px;
+  color: #ddd;
+  line-height: 1.6;
+}
+
+.level-tip-body strong {
+  color: #ffd700;
+}
+
+@keyframes fadeInDown {
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* 级牌徽标中的逢人配数量提示 */
+.wild-count {
+  color: #cc0000;
+  font-size: 11px;
+}
+
+/* ====== 出牌区域（中央） ====== */
+.play-area {
+  position: absolute;
+  top: 40%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 500px;
+  max-width: 90vw;
+  height: 180px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 5;
+  pointer-events: none;
+}
+
+.play-area > * {
+  pointer-events: auto;
+}
+
+.start-button {
+  padding: 18px 50px;
+  font-size: 20px;
+  font-weight: bold;
+  background: linear-gradient(145deg, #ffd700, #ffed4e);
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(255, 215, 0, 0.4);
+  transition: all 0.3s ease;
+  touch-action: manipulation;
+}
+
+.start-button:active {
+  transform: scale(0.97);
+}
+
+.thinking {
+  font-size: 16px;
+  color: #90EE90;
+  animation: pulse 1.5s ease-in-out infinite;
+  text-shadow: 0 0 8px rgba(144, 238, 144, 0.3);
+}
+
+@keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+
+/* ====== 玩家出牌区（AI出的牌在桌面的显示） ====== */
+.player-play-area {
+  position: absolute;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  padding: 6px;
+  z-index: 10;
+}
+
+.player-north .player-play-area {
+  top: 70px;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.player-west .player-play-area {
+  left: 65px;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.player-east .player-play-area {
+  right: 65px;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.player-south .player-play-area.south-play {
+  position: relative;
+  margin-bottom: 6px;
+  left: 0;
+  transform: none;
+  display: inline-flex;
+  justify-content: center;
+}
+
+.play-label {
+  font-size: 12px;
+  color: #ffd700;
+  font-weight: bold;
+  margin-bottom: 3px;
+  text-align: center;
+}
+
+.played-cards {
+  display: flex;
+  gap: 0;
+  justify-content: center;
+}
+
+.played-cards .card {
+  margin-left: var(--card-overlap-played);
+  width: calc(var(--card-width) - 10px);
+  height: calc(var(--card-height) - 14px);
+}
+
+.played-cards .card:first-child { margin-left: 0; }
+
+/* ====== 错误消息 ====== */
+.error-message {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: rgba(255, 68, 68, 0.95);
+  color: white;
+  padding: 12px 24px;
+  border-radius: 10px;
+  font-size: 16px;
+  font-weight: bold;
+  z-index: 200;
+  animation: shake 0.3s ease-in-out;
+}
+
+@keyframes shake {
+  0%, 100% { transform: translate(-50%, -50%) translateX(0); }
+  25% { transform: translate(-50%, -50%) translateX(-8px); }
+  75% { transform: translate(-50%, -50%) translateX(8px); }
+}
+
+/* ====== 牌型提示 ====== */
+.pattern-hint {
+  padding: 6px 14px;
+  background: rgba(76, 175, 80, 0.25);
+  color: #a0f0a0;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: bold;
+  white-space: nowrap;
+}
+
+/* ====== 玩家区域 ====== */
+.player-area {
+  position: absolute;
+}
+
+.player-north {
+  top: 8px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 2;
+}
+
+.player-south {
+  bottom: 8px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 94%;
+  max-width: 900px;
+  z-index: 20;
+}
+
+.player-west {
+  left: 6px;
+  top: 46%;
+  transform: translateY(-50%);
+  z-index: 2;
+}
+
+.player-east {
+  right: 6px;
+  top: 46%;
+  transform: translateY(-50%);
+  z-index: 2;
+}
+
+/* ====== 玩家信息 ====== */
+.player-info {
+  text-align: center;
+  margin-bottom: 6px;
+  color: #fff;
+}
+
+.player-name {
+  font-size: 13px;
+  font-weight: bold;
+  text-shadow: 0 1px 3px rgba(0,0,0,0.5);
+}
+
+.card-count-warning {
+  font-size: 12px;
+  color: #ff6b6b;
+  font-weight: bold;
+  background: rgba(255, 107, 107, 0.2);
+  padding: 2px 10px;
+  border-radius: 10px;
+  display: inline-block;
+}
+
+/* ====== 玩家手牌 (south - 用户) ====== */
+.player-hand {
+  display: flex;
+  justify-content: center;
+  flex-wrap: nowrap;
+  gap: 0;
+  padding: 4px 2px;
+  min-height: 0;
+  overflow-x: auto;
+  overflow-y: visible;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  touch-action: pan-x;
+}
+
+.player-hand::-webkit-scrollbar { display: none; }
+
+.player-hand .card {
+  flex: 0 0 auto;
+  margin-left: var(--card-overlap-hand);
+  transition: transform 0.15s ease;
+  /* Width set per breakpoint */
+}
+
+.player-hand .card:first-child {
+  margin-left: 0;
+}
+
+.player-hand .card.selected {
+  transform: translateY(-12px);
+  z-index: 10;
+}
+
+/* ====== 上家/下家手牌（暗牌） ====== */
+.cards-row {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  max-width: 500px;
+}
+
+.cards-row .card {
+  margin-left: var(--card-overlap-row);
+  width: 36px;
+  height: 52px;
+}
+
+.cards-row .card:first-child { margin-left: 0; }
+
+.cards-column {
+  display: flex;
+  flex-direction: column;
+  max-height: 300px;
+  overflow-y: auto;
+  scrollbar-width: none;
+}
+
+.cards-column::-webkit-scrollbar { display: none; }
+
+.cards-column .card {
+  margin-top: var(--card-overlap-col);
+  width: 36px;
+  height: 52px;
+}
+
+.cards-column .card:first-child { margin-top: 0; }
+
+/* ====== 出牌/过按钮 ====== */
+.player-actions {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 6px;
+}
+
+.action-button {
+  padding: 10px 32px;
+  font-size: 16px;
+  font-weight: bold;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.play-button {
+  background: linear-gradient(145deg, #4CAF50, #388E3C);
+  color: white;
+}
+
+.play-button:active:not(:disabled) { transform: scale(0.95); }
+
+.play-button:disabled {
+  background: #555;
+  color: #999;
+  cursor: not-allowed;
+}
+
+.pass-button {
+  background: linear-gradient(145deg, #f44336, #c62828);
+  color: white;
+}
+
+.pass-button:active { transform: scale(0.95); }
+
+/* ====== 理牌按钮 ====== */
+.card-actions {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  margin: 4px 0;
+}
+
+.action-btn {
+  padding: 6px 16px;
+  font-size: 12px;
+  font-weight: bold;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  touch-action: manipulation;
+}
+
+.sort-btn {
+  background: linear-gradient(145deg, #4CAF50, #388E3C);
+  color: white;
+}
+
+.sort-btn:active { transform: scale(0.95); }
+
+.restore-btn {
+  background: linear-gradient(145deg, #2196F3, #1565C0);
+  color: white;
+}
+
+.restore-btn:active { transform: scale(0.95); }
+
+/* ====== 手机竖屏（portrait） ====== */
+@media (max-width: 767px) and (orientation: portrait) {
+  .game {
+    --card-width: 56px;
+    --card-height: 80px;
+    --card-overlap-hand: -42px;
+    --card-overlap-row: -30px;
+    --card-overlap-col: -38px;
+    --card-overlap-played: -14px;
+  }
+
+  .player-north { top: 2px; }
+  .player-north .player-play-area { top: 46px; }
+
+  .player-south { bottom: 0; width: 100%; }
+
+  .player-west { left: 2px; }
+  .player-west .player-play-area { left: 42px; }
+
+  .player-east { right: 2px; }
+  .player-east .player-play-area { right: 42px; }
+
+  .play-area {
+    top: 35%;
+    width: auto;
+    height: 110px;
+  }
+
+  .start-button {
+    padding: 12px 32px;
+    font-size: 16px;
+    border-radius: 10px;
+  }
+
+  /* 手牌：大牌 + 重叠 + 可横滑 */
+  .player-hand {
+    min-height: 0;
+    padding: 2px 6px;
+    justify-content: flex-start;
+    gap: 0;
+    overflow-x: auto;
+    overflow-y: visible;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    touch-action: pan-x;
+  }
+
+  .player-hand::-webkit-scrollbar { display: none; }
+
+  .player-hand .card {
+    flex: 0 0 auto;
+    width: var(--card-width);
+    height: var(--card-height);
+    margin-left: var(--card-overlap-hand);
+  }
+
+  .player-hand .card:first-child {
+    margin-left: 0;
+  }
+
+  .player-hand .card.selected {
+    transform: translateY(-14px);
+    z-index: 10;
+  }
+
+  .cards-row .card { width: 28px; height: 40px; }
+  .cards-column { max-height: 180px; }
+  .cards-column .card { width: 28px; height: 40px; }
+
+  .action-button { padding: 8px 24px; font-size: 14px; }
+  .action-btn { padding: 5px 12px; font-size: 11px; }
+
+  .level-badge { font-size: 11px; padding: 4px 10px; }
+  .level-selector { top: 36px; }
+  .level-option { padding: 5px 10px; font-size: 11px; }
+
+  .level-tip { top: 48px; max-width: 200px; }
+  .level-tip-title { font-size: 12px; }
+  .level-tip-body { font-size: 11px; }
+
+  .player-info { margin-bottom: 2px; }
+  .player-name { font-size: 11px; }
+
+  .error-message { font-size: 14px; padding: 8px 16px; }
+  .pattern-hint { font-size: 11px; padding: 4px 8px; }
+  .thinking { font-size: 13px; }
+
+  .played-cards .card {
+    width: 38px;
+    height: 54px;
+  }
+}
+
+/* ====== 手机横屏（landscape） ====== */
+@media (max-width: 767px) and (orientation: landscape) {
+  .game {
+    --card-width: 52px;
+    --card-height: 74px;
+    --card-overlap-hand: -38px;
+    --card-overlap-row: -28px;
+    --card-overlap-col: -34px;
+    --card-overlap-played: -12px;
+  }
+
+  .player-south { bottom: 0; width: 100%; }
+  .play-area { top: 30%; height: 100px; }
+
+  .player-hand {
+    min-height: 0;
+    padding: 2px 6px;
+    justify-content: flex-start;
+    gap: 0;
+    overflow-x: auto;
+    overflow-y: visible;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    touch-action: pan-x;
+  }
+  .player-hand::-webkit-scrollbar { display: none; }
+
+  .player-hand .card {
+    flex: 0 0 auto;
+    width: var(--card-width);
+    height: var(--card-height);
+    margin-left: var(--card-overlap-hand);
+  }
+  .player-hand .card:first-child { margin-left: 0; }
+  .player-hand .card.selected { transform: translateY(-12px); z-index: 10; }
+}
+
+/* ====== 折叠屏/平板（Mate XTS展开态等） ====== */
+@media (min-width: 768px) and (max-width: 1300px) and (min-height: 600px) {
+  .game {
+    --card-width: 62px;
+    --card-height: 88px;
+    --card-overlap-hand: -46px;
+    --card-overlap-row: -34px;
+    --card-overlap-col: -42px;
+    --card-overlap-played: -16px;
+  }
+
+  .player-north { top: 6px; }
+  .player-north .player-play-area { top: 62px; }
+
+  .player-south { bottom: 6px; width: 98%; }
+
+  .player-west { left: 4px; }
+  .player-east { right: 4px; }
+
+  .play-area { top: 38%; width: auto; height: 150px; }
+
+  .player-hand {
+    min-height: 0;
+    justify-content: center;
+    gap: 0;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    overflow-y: visible;
+    scrollbar-width: none;
+  }
+  .player-hand::-webkit-scrollbar { display: none; }
+  .player-hand .card {
+    flex: 0 0 auto;
+    width: var(--card-width);
+    height: var(--card-height);
+    margin-left: var(--card-overlap-hand);
+  }
+  .player-hand .card:first-child { margin-left: 0; }
+  .player-hand .card.selected { transform: translateY(-14px); z-index: 10; }
+
+  .cards-row .card { width: 32px; height: 46px; }
+  .cards-column .card { width: 32px; height: 46px; }
+  .cards-column { max-height: 250px; }
+
+  .action-button { padding: 9px 28px; font-size: 15px; }
+  .level-badge { font-size: 12px; padding: 5px 12px; }
+
+  .played-cards .card {
+    width: 40px;
+    height: 56px;
+  }
+}
+
+/* ====== 通用桌面 ====== */
+@media (min-width: 1300px) and (min-height: 700px) {
+  .player-hand {
+    justify-content: center;
+    gap: 0;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    overflow-y: visible;
+    scrollbar-width: none;
+  }
+  .player-hand::-webkit-scrollbar { display: none; }
+  .player-hand .card {
+    flex: 0 0 auto;
+    width: var(--card-width);
+    height: var(--card-height);
+    margin-left: var(--card-overlap-hand);
+  }
+  .player-hand .card:first-child { margin-left: 0; }
+  .player-hand .card.selected {
+    transform: translateY(-14px);
+    z-index: 10;
+  }
+}
+
+/* ====== 大屏 ====== */
+@media (min-width: 1800px) and (min-height: 1000px) {
+  .game {
+    --card-width: 80px;
+    --card-height: 115px;
+    --card-overlap-hand: -38px;
+    --card-overlap-row: -48px;
+    --card-overlap-col: -60px;
+  }
+
+  .player-south { max-width: 1400px; }
+
+  .player-hand {
+    justify-content: center;
+    gap: 0;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    overflow-y: visible;
+    scrollbar-width: none;
+  }
+  .player-hand::-webkit-scrollbar { display: none; }
+  .player-hand .card {
+    flex: 0 0 auto;
+    width: var(--card-width);
+    height: var(--card-height);
+    margin-left: var(--card-overlap-hand);
+  }
+  .player-hand .card:first-child { margin-left: 0; }
+
+  .play-area { width: 600px; height: 250px; }
+  .start-button { padding: 22px 70px; font-size: 26px; }
+
+  .action-button { padding: 14px 50px; font-size: 20px; }
+  .action-btn { padding: 10px 24px; font-size: 14px; }
+
+  .player-name { font-size: 18px; }
+
+  .cards-column { max-height: 350px; }
+  .cards-column .card { width: 44px; height: 64px; }
+  .cards-row .card { width: 44px; height: 64px; }
+
+  .played-cards .card {
+    width: 70px;
+    height: 100px;
+  }
+}
+
+/* ====== 超宽屏 / 三屏幕 ====== */
+@media (min-width: 2400px) and (min-height: 900px) {
+  .game {
+    --card-width: 110px;
+    --card-height: 158px;
+    --card-overlap-hand: -50px;
+    --card-overlap-row: -64px;
+    --card-overlap-col: -80px;
+  }
+
+  .player-south { max-width: 2000px; }
+
+  .player-hand {
+    justify-content: center;
+    gap: 0;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    overflow-y: visible;
+    scrollbar-width: none;
+  }
+  .player-hand::-webkit-scrollbar { display: none; }
+  .player-hand .card {
+    flex: 0 0 auto;
+    width: var(--card-width);
+    height: var(--card-height);
+    margin-left: var(--card-overlap-hand);
+  }
+  .player-hand .card:first-child { margin-left: 0; }
+  .player-hand .card.selected {
+    transform: translateY(-20px);
+    z-index: 10;
+  }
+
+  .play-area { width: 800px; height: 320px; }
+  .start-button { padding: 28px 90px; font-size: 32px; }
+
+  .action-button { padding: 18px 60px; font-size: 24px; }
+  .action-btn { padding: 14px 32px; font-size: 18px; }
+
+  .player-name { font-size: 24px; }
+  .level-badge { font-size: 18px; padding: 8px 18px; }
+
+  .cards-column { max-height: 480px; }
+  .cards-column .card { width: 58px; height: 84px; }
+  .cards-row .card { width: 58px; height: 84px; }
+
+  .played-cards .card {
+    width: 96px;
+    height: 138px;
+  }
+}
+
+/* ====== 游戏结束界面 ====== */
+.game-over-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.85);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.game-over-content {
+  background: linear-gradient(145deg, #1a1a2e, #16213e);
+  border-radius: 20px;
+  padding: 40px 50px;
+  text-align: center;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+  border: 2px solid rgba(255, 255, 255, 0.1);
+}
+
+.game-over-title {
+  font-size: 36px;
+  margin-bottom: 24px;
+  color: #fff;
+}
+
+.game-over-stats {
+  margin-bottom: 30px;
+}
+
+.game-over-stats p {
+  font-size: 18px;
+  margin: 10px 0;
+  color: #b8b8b8;
+}
+
+.game-over-stats p strong {
+  color: #fff;
+}
+
+.game-over-actions {
+  display: flex;
+  gap: 16px;
+  justify-content: center;
+}
+
+.game-over-actions .action-button {
+  min-width: 120px;
+}
+
+.game-over-actions .action-button.secondary {
+  background: linear-gradient(145deg, #555, #444);
+}
+
+/* ====== 方向提示（横屏折叠屏） ====== */
+@media (orientation: landscape) and (max-height: 500px) {
+  .game::after {
+    content: '↻ 竖屏使用体验更佳';
+    position: absolute;
+    bottom: 50%;
+    left: 50%;
+    transform: translate(-50%, 50%);
+    color: rgba(255,255,255,0.6);
+    font-size: 14px;
+    z-index: 999;
+    pointer-events: none;
+  }
+}
