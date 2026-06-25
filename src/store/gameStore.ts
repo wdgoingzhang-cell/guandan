@@ -280,10 +280,27 @@ export const useGameStore = create<GameStore>((set, get) => ({
       set({
         phase: GamePhase.GameOver,
         winHistory: newWinHistory,
-        level: newLevel as [number, number],
+        level: newLevel,
         lastWinnerTeam: winner,
         lastLoserIndices: loserIndices
       });
+      return true;
+    }
+
+    // 接风规则：如果出完牌后手牌为0，且下一家是队友，则让队友接风
+    if (newCards.length === 0) {
+      const currentPlayerTeam = currentPlayerIndex % 2;
+      const nextPlayer = nextPlayerCounterClockwise(currentPlayerIndex);
+      const nextPlayerTeam = nextPlayer % 2;
+      
+      if (nextPlayerTeam === currentPlayerTeam) {
+        // 队友接风：清空场上牌，让队友自由出牌
+        set({
+          lastPlay: null,
+          lastPlayPlayerIndex: -1,
+          currentPlayerIndex: nextPlayer
+        });
+      }
     }
 
     return true;
@@ -351,7 +368,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
       const loserTeam = winner === 0 ? 1 : 0;
       const loserIndices = [0, 1, 2, 3].filter(i => newPlayers[i].teamId === loserTeam);
 
-      // 升级逻辑：获胜方升1级，如果对手没出过牌则升3级
+      // 升级逻辑
       const loserPlayer = newPlayers.find((p, i) =>
         i % 2 === loserTeam && p.cards.length === 27
       );
@@ -363,10 +380,26 @@ export const useGameStore = create<GameStore>((set, get) => ({
       set({
         phase: GamePhase.GameOver,
         winHistory: newWinHistory,
-        level: newLevel as [number, number],
+        level: newLevel,
         lastWinnerTeam: winner,
         lastLoserIndices: loserIndices
       });
+      return;
+    }
+
+    // 接风规则
+    if (newCards.length === 0) {
+      const currentTeam = playerIndex % 2;
+      const nextPlayer = nextPlayerCounterClockwise(playerIndex);
+      const nextTeam = nextPlayer % 2;
+      
+      if (nextTeam === currentTeam) {
+        set({
+          lastPlay: null,
+          lastPlayPlayerIndex: -1,
+          currentPlayerIndex: nextPlayer
+        });
+      }
     }
   },
 
@@ -441,9 +474,23 @@ export const useGameStore = create<GameStore>((set, get) => ({
     const { players, lastWinnerTeam, lastLoserIndices, currentLevel } = get();
     if (lastWinnerTeam === null || lastLoserIndices.length === 0) return;
 
-    // 找输家最大的牌（除了大小王不进贡）
+    // 抗贡规则：如果输家有双大王，可以抗贡
     const loserIndex = lastLoserIndices[0];
     const loserCards = players[loserIndex].cards;
+    const jokerCount = loserCards.filter(c => c.value === 16).length; // 大王数量
+    
+    if (jokerCount >= 2) {
+      // 抗贡成功，直接开始游戏
+      set({
+        phase: GamePhase.Playing,
+        currentPlayerIndex: loserIndex, // 输家先出牌
+        贡牌: { required: false, fromIndex: -1, toIndex: -1, card: null },
+        timerActive: true
+      });
+      return;
+    }
+
+    // 找输家最大的牌（除了大小王不进贡）
     const tributeCard = loserCards
       .filter(c => c.value < 15) // 排除大小王
       .sort((a, b) => b.value - a.value)[0];

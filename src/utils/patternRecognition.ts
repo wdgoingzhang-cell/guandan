@@ -346,34 +346,41 @@ export function compareCombinations(
   // 如果没有上家出牌，任何牌都可以出
   if (!lastPlay) return true;
   
-  // 火箭最大
+  // 火箭最大（双王）
   if (play.pattern === CardPattern.Rocket) return true;
   if (lastPlay.pattern === CardPattern.Rocket) return false;
   
-  // 同花顺炸弹 > 普通炸弹
-  if (play.pattern === CardPattern.FlushStraight && lastPlay.pattern === CardPattern.Bomb) {
-    return true;
-  }
-  if (lastPlay.pattern === CardPattern.FlushStraight && play.pattern === CardPattern.Bomb) {
-    return false;
+  // 炸弹大小规则：
+  // 6张以上炸弹 > 同花顺 > 5张炸弹 > 4张炸弹
+  
+  // 炸弹 vs 非炸弹
+  if (play.pattern === CardPattern.Bomb || play.pattern === CardPattern.FlushStraight) {
+    // 炸弹可以压任何非炸弹牌型
+    if (lastPlay.pattern !== CardPattern.Bomb && lastPlay.pattern !== CardPattern.FlushStraight) {
+      return true;
+    }
   }
   
-  // 炸弹可以压任何非炸弹牌型
-  if (play.pattern === CardPattern.Bomb && lastPlay.pattern !== CardPattern.Bomb) {
-    return true;
-  }
-  if (lastPlay.pattern === CardPattern.Bomb && play.pattern !== CardPattern.Bomb) {
-    return false;
-  }
-  
-  // 同花顺炸弹之间的比较
-  if (play.pattern === CardPattern.FlushStraight && lastPlay.pattern === CardPattern.FlushStraight) {
-    if (play.length !== lastPlay.length) return false;
-    return play.mainValue > lastPlay.mainValue;
+  if (lastPlay.pattern === CardPattern.Bomb || lastPlay.pattern === CardPattern.FlushStraight) {
+    // 非炸弹不能压炸弹
+    if (play.pattern !== CardPattern.Bomb && play.pattern !== CardPattern.FlushStraight) {
+      return false;
+    }
   }
   
-  // 炸弹之间的比较
-  if (play.pattern === CardPattern.Bomb && lastPlay.pattern === CardPattern.Bomb) {
+  // 炸弹之间的比较（含同花顺）
+  if ((play.pattern === CardPattern.Bomb || play.pattern === CardPattern.FlushStraight) &&
+      (lastPlay.pattern === CardPattern.Bomb || lastPlay.pattern === CardPattern.FlushStraight)) {
+    
+    const playBombLevel = getBombLevel(play);
+    const lastBombLevel = getBombLevel(lastPlay);
+    
+    // 不同等级的炸弹比较
+    if (playBombLevel !== lastBombLevel) {
+      return playBombLevel > lastBombLevel;
+    }
+    
+    // 同等级比较主值
     return play.mainValue > lastPlay.mainValue;
   }
   
@@ -382,4 +389,18 @@ export function compareCombinations(
   if (play.length !== lastPlay.length) return false;
   
   return play.mainValue > lastPlay.mainValue;
+}
+
+// 炸弹等级：6张+=4, 同花顺=3, 5张=2, 4张=1
+function getBombLevel(combo: CardCombination): number {
+  if (combo.pattern === CardPattern.FlushStraight) {
+    return 3; // 同花顺
+  }
+  if (combo.length >= 6) {
+    return 4; // 6张以上炸弹
+  }
+  if (combo.length === 5) {
+    return 2; // 5张炸弹
+  }
+  return 1; // 4张炸弹
 }

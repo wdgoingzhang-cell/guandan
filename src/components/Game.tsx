@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useGameStore } from '../store/gameStore';
 import { Card } from './Card';
+import { HandCards } from './HandCards';
 import { GamePhase } from '../types';
 import { identifyPattern } from '../utils/patternRecognition';
 import { isRedLevelCard, isLevelCard } from '../utils/cards';
@@ -352,17 +353,13 @@ export const Game: React.FC = () => {
         </div>
 
         <div className="player-hand">
-          {currentPlayer.cards.map((card) => (
-            <Card
-              key={card.id}
-              card={card}
-              selected={selectedCards.some(c => c.id === card.id)}
-              currentLevel={currentLevel}
-              onClick={() => handleCardClick(card)}
-              onTouchStart={(e) => handleTouchStart(e, card)}
-              onTouchEnd={(e) => handleTouchEnd(e, card)}
-            />
-          ))}
+          <HandCards
+            cards={currentPlayer.cards}
+            selectedCards={selectedCards}
+            onCardSelect={handleCardClick}
+            currentLevel={currentLevel}
+            isMyTurn={currentPlayerIndex === 0 && phase === GamePhase.Playing}
+          />
         </div>
         
         {/* 理牌按钮 */}

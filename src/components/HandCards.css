@@ -1,0 +1,268 @@
+/* 手牌组件样式 */
+
+.hand-cards-horizontal,
+.hand-cards-vertical {
+  position: relative;
+  width: 100%;
+}
+
+/* 布局切换按钮 */
+.layout-toggle {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 10px;
+  justify-content: center;
+}
+
+.layout-btn {
+  padding: 6px 16px;
+  border: 1px solid #ddd;
+  background: white;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: all 0.2s;
+}
+
+.layout-btn.active {
+  background: #1890ff;
+  color: white;
+  border-color: #1890ff;
+}
+
+.layout-btn:hover:not(.active) {
+  background: #f5f5f5;
+}
+
+/* 快捷操作按钮 */
+.quick-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 12px;
+  padding: 8px;
+  background: #f8f9fa;
+  border-radius: 6px;
+}
+
+.quick-action-group {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.quick-label {
+  font-size: 12px;
+  color: #666;
+  font-weight: 500;
+}
+
+.quick-btn {
+  padding: 4px 10px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 500;
+  transition: all 0.2s;
+}
+
+.flush-btn {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+}
+
+.flush-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+}
+
+.bomb-btn {
+  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+  color: white;
+}
+
+.bomb-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(245, 87, 108, 0.4);
+}
+
+/* 横向布局 */
+.horizontal-cards {
+  display: flex;
+  gap: 3px;
+  overflow-x: auto;
+  padding: 5px;
+  justify-content: flex-start;
+}
+
+.card-normal {
+  min-width: 45px;
+  height: 65px;
+  background: white;
+  border: 2px solid #ddd;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.card-normal:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.card-normal.selected {
+  transform: translateY(-15px);
+  border-color: #1890ff;
+  box-shadow: 0 8px 20px rgba(24, 144, 255, 0.3);
+}
+
+.card-normal.wild-card {
+  background: linear-gradient(135deg, #fff5f5 0%, #ffe8e8 100%);
+  border-color: #ff4d4f;
+}
+
+.card-content {
+  text-align: center;
+}
+
+.card-content .card-rank {
+  font-size: 16px;
+  font-weight: bold;
+}
+
+.card-content .card-suit {
+  font-size: 20px;
+}
+
+.wild-indicator {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  background: #ff4d4f;
+  color: white;
+  font-size: 10px;
+  padding: 1px 3px;
+  border-radius: 3px;
+}
+
+/* 垂直布局 */
+.vertical-columns {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 8px;
+  padding: 10px;
+  background: #f0f2f5;
+  border-radius: 8px;
+}
+
+.suit-column {
+  background: white;
+  border-radius: 6px;
+  padding: 8px;
+  transition: all 0.2s;
+}
+
+.suit-column.hovered {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.suit-header {
+  text-align: center;
+  font-size: 24px;
+  font-weight: bold;
+  margin-bottom: 8px;
+  padding-bottom: 4px;
+  border-bottom: 2px solid #f0f0f0;
+}
+
+.suit-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.card-mini {
+  padding: 6px 8px;
+  background: #fafafa;
+  border: 2px solid #e8e8e8;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.card-mini:hover {
+  background: #f0f0f0;
+  transform: translateX(3px);
+}
+
+.card-mini.selected {
+  background: #e6f7ff;
+  border-color: #1890ff;
+  transform: translateX(5px);
+}
+
+.card-mini.wild-card {
+  background: #fff1f0;
+  border-color: #ff4d4f;
+}
+
+.card-mini .card-rank {
+  font-weight: bold;
+}
+
+.card-mini .card-suit {
+  font-size: 16px;
+}
+
+.card-mini .wild-badge {
+  background: #ff4d4f;
+  color: white;
+  font-size: 10px;
+  padding: 1px 4px;
+  border-radius: 3px;
+}
+
+/* 响应式 */
+@media (max-width: 768px) {
+  .vertical-columns {
+    grid-template-columns: repeat(3, 1fr);
+  }
+  
+  .card-normal {
+    min-width: 40px;
+    height: 58px;
+  }
+  
+  .quick-actions {
+    flex-direction: column;
+  }
+}
+
+@media (max-width: 480px) {
+  .vertical-columns {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  
+  .card-normal {
+    min-width: 36px;
+    height: 52px;
+  }
+  
+  .card-content .card-rank {
+    font-size: 14px;
+  }
+  
+  .card-content .card-suit {
+    font-size: 16px;
+  }
+}
