@@ -17,6 +17,7 @@ export const Game: React.FC = () => {
     currentLevel,
     level,
     winHistory,
+    贡牌,
     initGame,
     selectCard,
     playCards,
@@ -166,6 +167,23 @@ export const Game: React.FC = () => {
                 重新开始
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* 贡牌/还牌提示 */}
+      {(phase === GamePhase['贡牌'] || phase === GamePhase['还牌']) && (
+        <div className="tribute-overlay">
+          <div className="tribute-content">
+            <h3>{phase === GamePhase['贡牌'] ? '🎴 进贡阶段' : '🃏 还牌阶段'}</h3>
+            {贡牌.card && (
+              <p className="tribute-card-info">
+                {phase === GamePhase['贡牌']
+                  ? `${players[贡牌.fromIndex]?.name} 向 ${players[贡牌.toIndex]?.name} 进贡`
+                  : `${players[贡牌.toIndex]?.name} 还牌给 ${players[贡牌.fromIndex]?.name}`}
+              </p>
+            )}
+            <div className="tribute-animation">处理中...</div>
           </div>
         </div>
       )}

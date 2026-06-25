@@ -821,6 +821,52 @@
   background: linear-gradient(145deg, #555, #444);
 }
 
+/* ====== 贡牌/还牌界面 ====== */
+.tribute-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.75);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.tribute-content {
+  background: linear-gradient(145deg, #2a2a3e, #1a1a2e);
+  border-radius: 16px;
+  padding: 30px 40px;
+  text-align: center;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+  border: 2px solid rgba(255, 255, 255, 0.1);
+}
+
+.tribute-content h3 {
+  font-size: 24px;
+  margin-bottom: 16px;
+  color: #fff;
+}
+
+.tribute-card-info {
+  font-size: 16px;
+  color: #b8b8b8;
+  margin-bottom: 12px;
+}
+
+.tribute-animation {
+  font-size: 14px;
+  color: #888;
+  animation: pulse 1s ease infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 0.6; }
+  50% { opacity: 1; }
+}
+
 /* ====== 方向提示（横屏折叠屏） ====== */
 @media (orientation: landscape) and (max-height: 500px) {
   .game::after {
