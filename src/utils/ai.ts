@@ -134,11 +134,27 @@ export function findAllPossiblePlays(cards: Card[], currentLevel: number): CardC
 export function aiSelectPlay(
   cards: Card[],
   lastPlay: CardCombination | null,
-  currentLevel: number
+  currentLevel: number,
+  isFirstRound: boolean = false
 ): CardCombination | null {
   const allPlays = findAllPossiblePlays(cards, currentLevel);
 
   if (allPlays.length === 0) return null;
+
+  // 首圈规则：如果有级牌，必须出包含级牌的牌
+  if (!lastPlay && isFirstRound) {
+    const hasLevelCard = cards.some(c => c.value === currentLevel);
+    if (hasLevelCard) {
+      const levelCardPlays = allPlays.filter(p =>
+        p.cards.some(c => c.value === currentLevel)
+      );
+      if (levelCardPlays.length > 0) {
+        // 出最小的包含级牌的牌
+        levelCardPlays.sort((a, b) => a.mainValue - b.mainValue);
+        return levelCardPlays[0];
+      }
+    }
+  }
 
   // 如果没有上家出牌，自由选择
   if (!lastPlay) {

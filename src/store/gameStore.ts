@@ -31,6 +31,13 @@ interface GameStore extends GameState {
   handleReturn: () => void; // 处理还牌
 }
 
+// 逆时针轮转：0(南) → 3(东) → 2(北) → 1(西) → 0
+function nextPlayerCounterClockwise(current: number): number {
+  const order = [0, 3, 2, 1]; // 逆时针顺序
+  const idx = order.indexOf(current);
+  return order[(idx + 1) % 4];
+}
+
 // 创建初始玩家
 function createPlayers(): Player[] {
   return [
@@ -203,7 +210,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
   },
 
   playCards: (): boolean => {
-    const { selectedCards, players, currentPlayerIndex, lastPlay, currentLevel } = get();
+    const { selectedCards, players, currentPlayerIndex, lastPlay, currentLevel, roundNumber } = get();
     if (selectedCards.length === 0) return false;
 
     // 识别牌型
@@ -217,6 +224,17 @@ export const useGameStore = create<GameStore>((set, get) => ({
     if (lastPlay && !compareCombinations(pattern, lastPlay, currentLevel)) {
       console.log('牌型无法压过上家');
       return false;
+    }
+
+    // 首圈规则：第一手牌必须包含级牌（如果有级牌）
+    if (!lastPlay && roundNumber === 1) {
+      const hasLevelCard = players[0].cards.some(c => c.value === currentLevel);
+      const selectedHasLevel = selectedCards.some(c => c.value === currentLevel);
+      
+      if (hasLevelCard && !selectedHasLevel) {
+        console.log('首圈必须出级牌');
+        return false;
+      }
     }
 
     const currentPlayer = players[currentPlayerIndex];
@@ -236,7 +254,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
       lastPlayPlayerIndex: currentPlayerIndex,
       passCount: 0,
       selectedCards: [],
-      currentPlayerIndex: (currentPlayerIndex + 1) % 4,
+      currentPlayerIndex: nextPlayerCounterClockwise(currentPlayerIndex),
       timer: 30
     });
 
@@ -286,20 +304,21 @@ export const useGameStore = create<GameStore>((set, get) => ({
     } else {
       set({
         passCount: newPassCount,
-        currentPlayerIndex: (currentPlayerIndex + 1) % 4,
+        currentPlayerIndex: nextPlayerCounterClockwise(currentPlayerIndex),
         timer: 30
       });
     }
   },
 
   aiPlay: (playerIndex: number) => {
-    const { players, lastPlay, currentLevel } = get();
+    const { players, lastPlay, currentLevel, roundNumber } = get();
     const player = players[playerIndex];
 
     if (player.cards.length === 0) return;
 
     // 使用智能 AI 选择出牌
-    const selectedPlay = aiSelectPlay(player.cards, lastPlay, currentLevel);
+    const isFirstRound = roundNumber === 1 && !lastPlay;
+    const selectedPlay = aiSelectPlay(player.cards, lastPlay, currentLevel, isFirstRound);
 
     if (!selectedPlay) {
       // AI 选择过
@@ -318,7 +337,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
       lastPlay: selectedPlay,
       lastPlayPlayerIndex: playerIndex,
       passCount: 0,
-      currentPlayerIndex: (playerIndex + 1) % 4,
+      currentPlayerIndex: nextPlayerCounterClockwise(playerIndex),
       timer: 30
     });
 
